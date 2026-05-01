@@ -29,7 +29,14 @@ def conv_nested(image, kernel):
     out = np.zeros((Hi, Wi))
 
     ### YOUR CODE HERE
-    pass
+    for i in range(Hi):
+        for j in range(Wi):
+            for m in range(Hk):
+                for n in range(Wk):
+                    ii = i + m - Hk // 2
+                    jj = j + n - Wk // 2
+                    if 0 <= ii < Hi and 0 <= jj < Wi:
+                        out[i, j] += image[ii, jj] * kernel[Hk - 1 - m, Wk - 1 - n]
     ### END YOUR CODE
 
     return out
@@ -56,7 +63,8 @@ def zero_pad(image, pad_height, pad_width):
     out = None
 
     ### YOUR CODE HERE
-    pass
+    out = np.zeros((H + 2 * pad_height, W + 2 * pad_width))
+    out[pad_height:pad_height + H, pad_width:pad_width + W] = image
     ### END YOUR CODE
     return out
 
@@ -85,7 +93,11 @@ def conv_fast(image, kernel):
     out = np.zeros((Hi, Wi))
 
     ### YOUR CODE HERE
-    pass
+    flipped_kernel = np.flip(kernel)
+    padded = zero_pad(image, Hk // 2, Wk // 2)
+    for i in range(Hi):
+        for j in range(Wi):
+            out[i, j] = np.sum(padded[i:i + Hk, j:j + Wk] * flipped_kernel)
     ### END YOUR CODE
 
     return out
@@ -105,7 +117,7 @@ def cross_correlation(f, g):
 
     out = None
     ### YOUR CODE HERE
-    pass
+    out = conv_fast(f, np.flip(g))
     ### END YOUR CODE
 
     return out
@@ -127,7 +139,8 @@ def zero_mean_cross_correlation(f, g):
 
     out = None
     ### YOUR CODE HERE
-    pass
+    g_zero_mean = g - np.mean(g)
+    out = cross_correlation(f, g_zero_mean)
     ### END YOUR CODE
 
     return out
@@ -151,7 +164,16 @@ def normalized_cross_correlation(f, g):
 
     out = None
     ### YOUR CODE HERE
-    pass
+    Hg, Wg = g.shape
+    Hf, Wf = f.shape
+    out = np.zeros((Hf, Wf))
+    g_norm = (g - np.mean(g)) / np.std(g)
+    padded = zero_pad(f, Hg // 2, Wg // 2)
+    for i in range(Hf):
+        for j in range(Wf):
+            patch = padded[i:i + Hg, j:j + Wg]
+            patch_norm = (patch - np.mean(patch)) / np.std(patch)
+            out[i, j] = np.sum(patch_norm * g_norm)
     ### END YOUR CODE
 
     return out
